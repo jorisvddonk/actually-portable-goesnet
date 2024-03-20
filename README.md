@@ -10,6 +10,7 @@ To compile, you need a Cosmopolitan toolchain installed. Then, it's as simple as
 
 Here are some non-exhaustive porting hints:
 
-1. Original source code uses "\\" as a path separator. Switch that over to "/".
-2. The original source code uses numeric flags in calls to `open`. Switch that over to the relevant constants defines by Cosmopolitan depending on the use case, e.g. `O_RDONLY` for read-only file access.
-3. You can replace calls to `tell (fh)` with `lseek(fh, 0, SEEK_CUR)`.
+* `compat.h` has a bunch of common code and a few things that got ported over, so include that first!
+* Original source code uses "\\" as a path separator. Switch that over to "/".
+* The original source code uses numeric flags in calls to `open`. Switch that over to the relevant constants defines by Cosmopolitan depending on the use case, e.g. `O_RDONLY` for read-only file access.
+* You can replace calls to `tell (fh)` with `lseek(fh, 0, SEEK_CUR)`.

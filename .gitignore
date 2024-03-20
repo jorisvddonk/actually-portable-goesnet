@@ -2,3 +2,4 @@ src/*.com
 src/*.com.dbg
 src/*.elf
 data/*.BIN
+modules/*.dbg
