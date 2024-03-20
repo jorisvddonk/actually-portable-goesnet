@@ -981,9 +981,7 @@ double ap_target_id = 12345;
 
 int main(int argc, char *argv[])
 {
-    msg ("!");
 	unfreeze ();
-    msg (".");
 	if (_argc<2 && ap_targetted != 1) {
 		msg ("________USAGE________");
 		msg ("DL OBJECTNAME");
@@ -1002,8 +1000,6 @@ int main(int argc, char *argv[])
 
 	gh = _open (guide, O_RDONLY);
 
-    msg (".");
-
 	fh = _open (file, O_RDONLY);
 	if (fh == -1) {
 		fh = _open (file_cwd, O_RDONLY);
@@ -1012,8 +1008,6 @@ int main(int argc, char *argv[])
 			return;
 		}
 	}
-
-    msg (".");
 
 	if (_argc<2) {
 		ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000;
@@ -1030,8 +1024,6 @@ int main(int argc, char *argv[])
 		msg ("CANNOT BE FOUND.");
 		return;
 	}
-
-    msg (".");
 
 	i = 2;
 	strcpy (parbuffer, _argv[1]);
