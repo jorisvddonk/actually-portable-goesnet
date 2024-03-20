@@ -3,23 +3,47 @@
 	Noctis galactic map / DL command.
 	GOES Net Module.
 
+    Modified for compilation with Cosmopolitan libc
+    Requires that STARMAP.BIN, GUIDE.BIN and CURRENT.BIN are either in ../data/ or in the current working directory.
+
+    Compiling:
+    cosmocc dl.c -o dl.com
+
+    USAGE:
+    ./dl.com FENIA
 */
 
 const double MAX_OBJECTS_PER_STAR = 80;
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <conio.h>
-#include <math.h>
-#include <dos.h>
-#include <io.h>
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/math.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/conv.h"
+#include "libc/sysv/consts/o.h"
+#include "brtl.h"
+
+// Compatibilty with Cosmopolitan libc:
+#define _read read
+#define _open open
+#define _argc argc
+#define _argv argv
+#define _close close
+#define strupr brtl_strupr
+#define random brtl_random
+#define srand brtl_srand
+
+// Various noctis defines
+#define M_PI       3.14159265358979323846   // pi
+#define M_PI_2     1.57079632679489661923   // pi/2
+#define M_PI_4     0.785398163397448309616  // pi/4
 
 //////////////////////////////////////////////////////////////////////////////
 
-char   *situation_file  = "..\\DATA\\Current.BIN";
+char   *situation_file  = "..//data//CURRENT.BIN";
+char   *situation_file_cwd  = "CURRENT.BIN";
 
-char   sync               = 1;		// 0
+char   nsync               = 1;		// 0
 char   anti_rad           = 1;          // 1
 char   pl_search          = 0;          // 2
 char   field_amplificator = 0;          // 3
@@ -86,169 +110,97 @@ char   ap_reached         = 0;
 int    lifter		  = 0;
 double secs		  = 0;
 
-void unfreeze ()
-{
-	int fh = _open (situation_file, 0);
-	if (fh>-1) {
-		_read (fh, &sync, 244);
-		_close (fh);
+void unfreeze() {
+    /* Reading the previous situation */
+	int fh = _open (situation_file, O_RDONLY);
+	if (fh == -1) {
+		fh = _open (situation_file_cwd, O_RDONLY);
+		if (fh == -1) {
+            msg( "CANNOT READ SITUATION FILE ");
+			return;
+		}
 	}
+
+    read(fh, &nsync, 1);
+    read(fh, &anti_rad, 1);
+    read(fh, &pl_search, 1);
+    read(fh, &field_amplificator, 1);
+    read(fh, &ilight, 1);
+    read(fh, &ilightv, 1);
+    read(fh, &charge, 1);
+    read(fh, &revcontrols, 1);
+    read(fh, &ap_targetting, 1);
+    read(fh, &ap_targetted, 1);
+    read(fh, &ip_targetting, 1);
+    read(fh, &ip_targetted, 1);
+    read(fh, &ip_reaching, 1);
+    read(fh, &ip_reached, 1);
+    read(fh, &ap_target_spin, 1);
+    read(fh, &ap_target_r, 1);
+    read(fh, &ap_target_g, 1);
+    read(fh, &ap_target_b, 1);
+    read(fh, &nearstar_spin, 1);
+    read(fh, &nearstar_r, 1);
+    read(fh, &nearstar_g, 1);
+    read(fh, &nearstar_b, 1);
+    read(fh, &gburst, 1);
+    read(fh, &menusalwayson, 1);
+    read(fh, &depolarize, 1);
+    read(fh, &sys, 2);
+    read(fh, &pwr, 2);
+    read(fh, &dev_page, 2);
+    read(fh, &ap_target_class, 2);
+    read(fh, &f_ray_elapsed, 2);
+    read(fh, &nearstar_class, 2);
+    read(fh, &nearstar_nop, 2);
+    read(fh, &pos_x, 4);
+    read(fh, &pos_y, 4);
+    read(fh, &pos_z, 4);
+    read(fh, &user_alfa, 4);
+    read(fh, &user_beta, 4);
+    read(fh, &navigation_beta, 4);
+    read(fh, &ap_target_ray, 4);
+    read(fh, &nearstar_ray, 4);
+    read(fh, &dzat_x, 8);
+    read(fh, &dzat_y, 8);
+    read(fh, &dzat_z, 8);
+    read(fh, &ap_target_x, 8);
+    read(fh, &ap_target_y, 8);
+    read(fh, &ap_target_z, 8);
+    read(fh, &nearstar_x, 8);
+    read(fh, &nearstar_y, 8);
+    read(fh, &nearstar_z, 8);
+    read(fh, &helptime, 8);
+    read(fh, &ip_target_initial_d, 8);
+    read(fh, &requested_approach_coefficient, 8);
+    read(fh, &current_approach_coefficient, 8);
+    read(fh, &reaction_time, 8);
+    read(fh, &fcs_status, 11);
+    read(fh, &fcs_status_delay, 2);
+    read(fh, &psys, 2);
+    read(fh, &ap_target_initial_d, 8);
+    read(fh, &requested_vimana_coefficient, 8);
+    read(fh, &current_vimana_coefficient, 8);
+    read(fh, &vimana_reaction_time, 8);
+    read(fh, &lithium_collector, 1);
+    read(fh, &autoscreenoff, 1);
+    read(fh, &ap_reached, 1);
+    read(fh, &lifter, 2);
+    read(fh, &secs, 8);
+    //read(fh, &data, 1);
+    //read(fh, &surlight, 1);
+    //read(fh, &gnc_pos, 1);
+    //read(fh, &goesfile_pos, 4);
+    //read(fh, goesnet_command, 120);
+
+    close(fh);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-unsigned char far *adaptor = (unsigned char far *) 0xA0000000;
-
-char digimap[65*5] = {
-	 0, 0, 0, 0, 0, // 32. spazio vuoto
-	 2, 2, 2, 0, 2, // 33. punto esclamativo
-	 5, 0, 0, 0, 0, // 34. virgolette
-	 0, 0, 3, 5, 5, // 35. cancelletto (rappresentato da una piccola n.)
-	 2, 2, 6, 2, 2, // 36. sistro
-	 1, 4, 2, 1, 4, // 37. percento
-	 0, 0, 2, 0, 0, // 38. e commericale (non � possibile visualizzarla)
-	 0, 2, 2, 0, 0, // 39. apice
-	 4, 2, 2, 2, 4, // 40. parentesi tonda aperta
-	 1, 2, 2, 2, 1, // 41. parentesi tonda chiusa
-	 0, 0, 7, 2, 2, // 42. asterisco
-	 0, 2, 7, 2, 0, // 43. segno pi�
-	 0, 0, 0, 2, 1, // 44. virgola
-	 0, 0, 7, 0, 0, // 45. segno meno
-	 0, 0, 0, 0, 2, // 46. punto
-	 0, 4, 2, 1, 0, // 47. barra destrorsa
-	 7, 5, 5, 5, 7, // 48. 0
-	 3, 2, 2, 2, 7, // 49. 1
-	 7, 4, 7, 1, 7, // 50. 2
-	 7, 4, 6, 4, 7, // 51. 3
-	 4, 6, 5, 7, 4, // 52. 4
-	 7, 1, 7, 4, 7, // 53. 5
-	 7, 1, 7, 5, 7, // 54. 6
-	 7, 4, 4, 4, 4, // 55. 7
-	 7, 5, 7, 5, 7, // 56. 8
-	 7, 5, 7, 4, 4, // 57. 9
-	 0, 2, 0, 2, 0, // 58. duepunti
-	 0, 2, 0, 2, 1, // 59. punto e virgola
-	 4, 2, 1, 2, 4, // 60. minore
-	 0, 7, 0, 7, 0, // 61. uguale
-	 1, 2, 4, 2, 1, // 62. maggiore
-	 7, 4, 6, 0, 2, // 63. punto interrogativo
-	 0, 2, 0, 0, 0, // 64. a commerciale (non visualizzabile)
-	 7, 5, 7, 5, 5, // 65. A
-	 7, 5, 3, 5, 7, // 66. B
-	 7, 1, 1, 1, 7, // 67. C
-	 3, 5, 5, 5, 3, // 68. D
-	 7, 1, 3, 1, 7, // 69. E
-	 7, 1, 3, 1, 1, // 70. F
-	 7, 1, 5, 5, 7, // 71. G
-	 5, 5, 7, 5, 5, // 72. H
-	 2, 2, 2, 2, 2, // 73. I
-	 4, 4, 4, 5, 7, // 74. J
-	 5, 5, 3, 5, 5, // 75. K
-	 1, 1, 1, 1, 7, // 76. L
-	 7, 7, 5, 5, 5, // 77. M
-	 5, 7, 7, 5, 5, // 78. N
-	 7, 5, 5, 5, 7, // 79. O
-	 7, 5, 7, 1, 1, // 80. P
-	 7, 5, 5, 1, 5, // 81. Q
-	 7, 5, 3, 5, 5, // 82. R
-	 7, 1, 7, 4, 7, // 83. S
-	 7, 2, 2, 2, 2, // 84. T
-	 5, 5, 5, 5, 7, // 85. U
-	 5, 5, 5, 5, 2, // 86. V
-	 5, 5, 7, 7, 5, // 87. W
-	 5, 5, 2, 5, 5, // 88. X
-	 5, 5, 7, 2, 2, // 89. Y
-	 7, 4, 2, 1, 7, // 90. Z
-	 0, 0, 6, 2, 2, // 91. parentesi quadra aperta
-	 0, 1, 2, 4, 0, // 92. barra sinistrorsa
-	 2, 2, 6, 0, 0, // 93. parentesi quadra chiusa
-	 2, 2, 2, 2, 2, // 94. ordinale femminile
-	 0, 0, 0, 0, 7, // 95. sottolinea
-	 1, 2, 0, 0, 0  // 96. accento
-};
-
-void areaclear (unsigned char far *dest, int x, int y,
-		int x2, int y2, int l, int h, unsigned char pattern)
-{
-	unsigned p;
-
-	if (x<0) x = 0;
-	if (y<0) y = 0;
-
-	if (x2>=320) x2 = 319;
-	if (y2>=200) y2 = 199;
-
-	if (x2>0) l = x2 - x;
-	if (y2>0) h = y2 - y;
-
-	if (x+l>=320) l = 320 - x;
-	if (y+h>=200) h = 200 - y;
-
-	if (l<1 || h<1) return;
-
-	p = 320 * y + x;
-
-	asm {	push es
-		pusha
-		pushf
-		cld
-		les di, dword ptr dest
-		add di, p
-		mov al, pattern
-		db 0x66; shl ax, 8
-		mov al, pattern
-		db 0x66; shl ax, 8
-		mov al, pattern
-		db 0x66; shl ax, 8
-		mov al, pattern }
-ac_nextl: asm {	push di
-		mov cx, l
-		shr cx, 2
-		jcxz ac_bytes
-		db 0xf3 // rep stosd
-		db 0x66
-		db 0xab }
-ac_bytes: asm { mov cx, l
-		and cx, 3
-		jcxz ac_endl
-		rep stosb }
-ac_endl:  asm { pop di
-		add di, 320
-		dec h
-		jnz ac_nextl
-		popf
-		popa
-		pop es }
-}
-
-void wrouthud (unsigned x, unsigned y, unsigned l, char *text)
-{
-	int j, i, n;
-	unsigned spot;
-
-	n = 0; if (!l) l = 32767;
-	spot = y * 320 + x;
-
-	while (text[n] && n < l) {
-		j = (text[n] - 32) * 5;
-		for (i = 0; i < 5; i++) {
-			if (digimap[j + i] & 1) adaptor[spot+0] = 191 - adaptor[spot+0];
-			if (digimap[j + i] & 2) adaptor[spot+1] = 191 - adaptor[spot+1];
-			if (digimap[j + i] & 4) adaptor[spot+2] = 191 - adaptor[spot+2];
-			spot += 320;
-		}
-		spot -= 320 * 5;
-		spot += 4;
-		n++;
-	}
-}
-
 void warn (char *text, int line)
 {
-	int w2 = strlen(text) * 2;
-
-	areaclear (adaptor, 160 - w2 - 1, 100 + line * 8, 0, 0, w2*2 + 2, 8, 127);
-	wrouthud (160 - w2, 100 + line * 8 + 1, NULL, text);
+    // no-op as we don't need to write to the framebuffer in this version of the dl module
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -284,11 +236,12 @@ double  idscale = 0.00001;
 int	sts;
 char	query;
 
-long	round;
 int 	i, fh, gh;
 int 	analyzed_sectors_range;
-char	*file = "..\\DATA\\STARMAP.BIN";
-char	*guide = "..\\DATA\\GUIDE.BIN";
+char	*file = "..//data//STARMAP.BIN";
+char    *file_cwd = "STARMAP.BIN";
+char	*guide = "..//data//GUIDE.BIN";
+char	*guide_cwd = "GUIDE.BIN";
 
 char	outbuffer[40];
 char	textbuffer[40];
@@ -416,113 +369,81 @@ float  zrandom (int range) { return (random(range) - random(range)); }
 double nearstar_identity;
 int    nearstar_nob;
 
-char isthere (double star_id)
-{
-	char warnbuffer[41];
+int8_t isthere(double star_id) { // from Noctis-IV-LR: https://github.com/dgcole/noctis-iv-lr/
+    int8_t visible_sectors = 9;
+    int32_t sect_x, sect_y, sect_z;
+    int32_t k, advance = 100000;
+    double sidlow  = star_id - idscale;
+    double sidhigh = star_id + idscale;
+    uint8_t sx, sy, sz;
+    double laststar_id;
+    sect_x = (dzat_x - visible_sectors * 50000) / 100000;
+    sect_x *= 100000;
+    sect_y = (dzat_y - visible_sectors * 50000) / 100000;
+    sect_y *= 100000;
+    sect_z = (dzat_z - visible_sectors * 50000) / 100000;
+    sect_z *= 100000;
 
-	double laststar_id;
+    if (field_amplificator) {
+        visible_sectors = 14;
+    }
 
-	double sidlow = star_id - idscale;
-	double sidhigh = star_id + idscale;
+    k = 100000 * visible_sectors;
 
-	unsigned sx, sy, sz;
+    for (sx = visible_sectors; sx > 0; sx--, sect_y -= k, sect_x += advance) {
+        for (sy = visible_sectors; sy > 0; sy--, sect_z -= k, sect_y += advance) {
+            for (sz = visible_sectors; sz > 0; sz--, sect_z += advance) {
+                // TODO; Cleanup, rename properly. No teletubby names.
+                int32_t eax = sect_x;
+                int32_t edx = sect_z;
 
-	unsigned visible_sectors_x = analyzed_sectors_range;
-	unsigned visible_sectors_y = analyzed_sectors_range;
-	unsigned visible_sectors_z = analyzed_sectors_range;
+                eax += edx;
+                int32_t ecx = eax;
+                edx         = eax;
+                edx &= 0x0001FFFF;
 
-	long   	advance = 100000;
-	long   	sect_x, sect_y, sect_z;
+                edx += sect_x;
+                edx -= 0xC350;
+                laststar_x = edx;
 
-	long   	align_m = 100000 * visible_sectors_z;
-	long   	align_e = 100000 * visible_sectors_y;
+                int64_t result = (int64_t) edx * (int64_t) eax;
+                eax            = result & 0xFFFFFFFF;
+                edx            = result >> 32;
 
-	sect_x = (dzat_x - visible_sectors_x*50000) / 100000; sect_x *= 100000;
-	sect_y = (dzat_y - visible_sectors_y*50000) / 100000; sect_y *= 100000;
-	sect_z = (dzat_z - visible_sectors_z*50000) / 100000; sect_z *= 100000;
+                edx += eax;
+                ecx += edx;
+                edx &= 0x0001FFFF;
 
-	asm {	mov ax, visible_sectors_x
-		mov sx, ax }
-e_while:asm {	mov ax, visible_sectors_y
-		mov sy, ax }
-m_while:asm {	mov ax, visible_sectors_z
-		mov sz, ax }
-i_while:asm {	db 0x66, 0xBB, 0x50, 0xC3, 0x00, 0x00 // mov ebx, 50000
-		db 0x66; mov ax, word ptr sect_x
-		db 0x66; mov dx, word ptr sect_z
-		db 0x66; add ax, dx
-		db 0x66; mov cx, ax
-		db 0x66; mov dx, ax
-		db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-		db 0x66; add dx, word ptr sect_x
-		db 0x66; sub dx, bx
-		db 0x66; mov word ptr laststar_x, dx
-		db 0x66; imul dx
-		db 0x66; add dx, ax
-		db 0x66; add cx, dx
-		db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-		db 0x66; add dx, word ptr sect_y
-		db 0x66; sub dx, bx
-		db 0x66; mov word ptr laststar_y, dx
-		db 0x66; mov ax, cx
-		db 0x66; imul dx
-		db 0x66; add dx, ax
-		db 0x66, 0x81, 0xE2, 0xFF, 0xFF, 0x01, 0x00 // and edx, 0x0001FFFF
-		db 0x66; add dx, word ptr sect_z
-		db 0x66; sub dx, bx
-		db 0x66; mov word ptr laststar_z, dx
-		fild dword ptr laststar_x
-		fst  laststar_x
-		fmul idscale
-		fild dword ptr laststar_y
-		fst  laststar_y
-		fmul idscale
-		fild dword ptr laststar_z
-		fst  laststar_z
-		fmul idscale
-		fmulp
-		fmulp
-		fst laststar_id
-		fcomp sidlow
-		fstsw ax
-		sahf
-		jb i_next
-		fld laststar_id
-		fcomp sidhigh
-		fstsw ax
-		sahf
-		jb y_end }
-i_next:	asm {	db 0x66; mov ax, word ptr advance
-		db 0x66; add word ptr sect_z, ax
-		dec sz
-		jz i_end
-		jmp i_while }
-i_end:	  asm { db 0x66; mov dx, word ptr align_m
-		db 0x66; sub word ptr sect_z, dx
-		db 0x66; add word ptr sect_y, ax
-		dec sy
-		jz m_end
-		jmp m_while }
-m_end:	  asm { db 0x66; mov dx, word ptr align_e
-		db 0x66; sub word ptr sect_y, dx
-		db 0x66; add word ptr sect_x, ax
-		dec sx
-		jz e_end
-		db 0x66; pusha }
-		if (sts > 100) {
-			sprintf (warnbuffer, "SLICE %d OF %d", visible_sectors_x - sx, visible_sectors_x);
-			warn (warnbuffer, 0);
-			while (kbhit()) {
-				if (getch() == 27) {
-					asm { db 0x66; popa }
-					return (0);
-				}
-			}
-		}
-	  asm { db 0x66; popa
-		jmp e_while }
-e_end:	  return (0);
-y_end:	  return (1);
+                edx += sect_y;
+                edx -= 0xC350;
+                laststar_y = edx;
+                eax        = ecx;
+
+                result = (int64_t) edx * (int64_t) eax;
+                eax    = result & 0xFFFFFFFF;
+                edx    = result >> 32;
+
+                edx += eax;
+                edx &= 0x0001FFFF;
+
+                edx += sect_z;
+                edx -= 0xC350;
+                laststar_z = edx;
+
+                laststar_x = round(laststar_x);
+                laststar_y = round(laststar_y);
+                laststar_z = round(laststar_z);
+
+                laststar_id = (laststar_x * idscale) * (laststar_y * idscale) * (laststar_z * idscale);
+
+                if (laststar_id > sidlow && laststar_id < sidhigh) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
 void extract_ap_target_infos ()
@@ -856,7 +777,7 @@ void listplanets ()
 			planet_nr  = object_label[23] - '0';
 			planet_nr += 10 * (object_label[22] - '0');
 			if (nearstar_p_owner[planet_nr - 1] == -1) {
-				labposit[pcount] = tell (fh) - 32;
+				labposit[pcount] = lseek(fh, 0, SEEK_CUR) - 32;
 				labprogr[pcount] = planet_nr;
 				least = 1;
 				pcount++;
@@ -914,7 +835,7 @@ void listplanets ()
 				planet_nr  = object_label[23] - '0';
 				planet_nr += 10 * (object_label[22] - '0');
 				if (nearstar_p_owner[planet_nr - 1] == planet_id - 1) {
-					labposit2[mcount] = tell (fh) - 32;
+					labposit2[mcount] = lseek(fh, 0, SEEK_CUR) - 32;
 					labprogr2[mcount] = nearstar_p_moonid[planet_nr - 1];
 					mcount++;
 				}}
@@ -1011,7 +932,7 @@ void listplanets ()
 			planet_nr  = object_label[23] - '0';
 			planet_nr += 10 * (object_label[22] - '0');
 			if (nearstar_p_owner[planet_nr - 1] == planet_id - 1) {
-				labposit2[mcount] = tell (fh) - 32;
+				labposit2[mcount] = lseek(fh, 0, SEEK_CUR) - 32;
 				labprogr2[mcount] = nearstar_p_moonid[planet_nr - 1];
 				least = 1;
 				mcount++;
@@ -1072,22 +993,11 @@ void listplanets ()
 
 double ap_target_id = 12345;
 
-void main ()
+int main(int argc, char *argv[])
 {
-	asm {	xor	ax, ax
-		mov	es, ax
-		cmp	byte ptr es:[0x449], 0x13
-		je	startup }
-
-	printf ("\nGalactic Organization of Explorers and Stardrifters (G.O.E.S)\n");
-	printf ("-------------------------------------------------------------\n");
-	printf ("This is a GOES NET module and must be run from a stardrifter.\n");
-	printf ("Please use the onboard computer console to run this module.\n");
-	printf ("\n\t- GOES NET onboard microsystem, EPOC 6011 REVISION 2\n");
-	return;
-
-	startup:
+    msg ("!");
 	unfreeze ();
+    msg (".");
 	if (_argc<2 && ap_targetted != 1) {
 		msg ("________USAGE________");
 		msg ("DL OBJECTNAME");
@@ -1104,13 +1014,20 @@ void main ()
 		msg (divider);
 	}
 
-	gh = _open (guide, 0);
+	gh = _open (guide, O_RDONLY);
 
-	fh = _open (file, 0);
+    msg (".");
+
+	fh = _open (file, O_RDONLY);
 	if (fh == -1) {
-		msg ("STARMAP NOT AVAILABLE");
-		return;
+		fh = _open (file_cwd, O_RDONLY);
+		if (fh == -1) {
+			msg ("STARMAP NOT AVAILABLE");
+			return;
+		}
 	}
+
+    msg (".");
 
 	if (_argc<2) {
 		ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000;
@@ -1127,6 +1044,8 @@ void main ()
 		msg ("CANNOT BE FOUND.");
 		return;
 	}
+
+    msg (".");
 
 	i = 2;
 	strcpy (parbuffer, _argv[1]);
