@@ -3,6 +3,14 @@
 	Noctis galactic guide / WHERE command.
 	GOES Net Module.
 
+    Modified for compilation with Cosmopolitan libc
+    Requires that STARMAP.BIN is in ../data/ or in the current working directory.
+
+    Compiling:
+    cosmocc where.c -o where.com
+
+    USAGE:
+    ./where.com SURICRASIA
 */
 
 #include "libc/stdio/stdio.h"
