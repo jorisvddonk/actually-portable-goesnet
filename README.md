@@ -10,5 +10,6 @@ To compile, you need a Cosmopolitan toolchain installed. Then, it's as simple as
 
 Here are some non-exhaustive porting hints:
 
-1. Original source code uses "\" as a path separator. Switch that over to "/".
+1. Original source code uses "\\" as a path separator. Switch that over to "/".
 2. The original source code uses numeric flags in calls to `open`. Switch that over to the relevant constants defines by Cosmopolitan depending on the use case, e.g. `O_RDONLY` for read-only file access.
+3. You can replace calls to `tell (fh)` with `lseek(fh, 0, SEEK_CUR)`.
