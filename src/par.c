@@ -3,6 +3,15 @@
 	Noctis galactic guide / PAR command.
 	GOES Net Module.
 
+    Modified for compilation with Cosmopolitan libc
+    Requires that STARMAP.BIN is in ../data/ or in the current working directory.
+
+    Compiling:
+    cosmocc par.c -o par.com
+
+    USAGE:
+    ./par.com FENIA
+
 */
 
 #include "libc/stdio/stdio.h"
