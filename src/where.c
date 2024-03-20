@@ -5,41 +5,16 @@
 
 */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <conio.h>
-#include <dos.h>
-#include <io.h>
+#include "libc/stdio/stdio.h"
+#include "libc/str/str.h"
+#include "libc/math.h"
+#include "libc/calls/calls.h"
+#include "libc/fmt/conv.h"
+#include "libc/sysv/consts/o.h"
+#include "compat.h"
 
-char msgbuffer[77];
-char *divider = "&&&&&&&&&&&&&&&&&&&&&";
-
-void msg (char *string)
-{
-	int x;
-
-	strcpy (msgbuffer, string);
-	msgbuffer[21] = 0;
-	printf (msgbuffer);
-
-	x = strlen(msgbuffer);
-	while (x < 21) {
-		printf (" ");
-		x++;
-	}
-}
-
-double 	object_id = 12345;
-char   	object_label[25];
-double 	s_object_id = 12345;
-char   	s_object_label[25];
-
-double	subject_id = 12345;
-double  idscale = 0.00001;
 
 int 	i, fh;
-char	*file = "..\\DATA\\STARMAP.BIN";
 
 char	outbuffer[40];
 char	textbuffer[40];
@@ -109,23 +84,10 @@ char find (char *starname)
 	return (found);
 }
 
-void main ()
+int main(int argc, char *argv[])
 {
 	char query;
 
-	asm {	xor	ax, ax
-		mov	es, ax
-		cmp	byte ptr es:[0x449], 0x13
-		je	startup }
-
-	printf ("\nGalactic Organization of Explorers and Stardrifters (G.O.E.S)\n");
-	printf ("-------------------------------------------------------------\n");
-	printf ("This is a GOES NET module and must be run from a stardrifter.\n");
-	printf ("Please use the onboard computer console to run this module.\n");
-	printf ("\n\t- GOES NET onboard microsystem, EPOC 6011 REVISION 2\n");
-	return;
-
-	startup:
 	if (_argc<2) {
 		msg ("________USAGE________");
 		msg ("WHERE PLANETNAME");
@@ -139,10 +101,13 @@ void main ()
 		msg (divider);
 	}
 
-	fh = _open (file, 4);
+	fh = _open (file, O_RDONLY);
 	if (fh == -1) {
-		msg ("STARMAP NOT AVAILABLE");
-		return;
+		fh = _open (file_cwd, O_RDONLY);
+		if (fh == -1) {
+			msg ("STARMAP NOT AVAILABLE");
+			return;
+		}
 	}
 
 	i = 2;
