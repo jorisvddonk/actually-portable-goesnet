@@ -6,6 +6,8 @@
 #define _argc argc
 #define _argv argv
 #define _close close
+#define _creat creat
+#define _write write
 #define strupr brtl_strupr
 #define random brtl_random
 #define srand brtl_srand
@@ -16,7 +18,12 @@
 #define M_PI       3.14159265358979323846   // pi
 #define M_PI_2     1.57079632679489661923   // pi/2
 #define M_PI_4     0.785398163397448309616  // pi/4
-
+#define qt_M_PI   4*M_PI/3
+#define star_classes    12
+#define planet_types    10
+#define avgmoons        4
+#define log2avgmoons	2
+#define maxbodies	20 * avgmoons
 
 
 
@@ -27,6 +34,8 @@ char	*file = "..//data//STARMAP.BIN";
 char    *file_cwd = "STARMAP.BIN";
 char	*guide = "..//data//GUIDE.BIN";
 char	*guide_cwd = "GUIDE.BIN";
+char    *comm = "..//data//COMM.BIN";
+char    *comm_cwd = "COMM.BIN";
 
 char   nsync               = 1;		// 0
 char   anti_rad           = 1;          // 1
@@ -117,6 +126,57 @@ char *divider = "&&&&&&&&&&&&&&&&&&&&&";
 void msg (char *string);
 void warn (char *text, int line);
 
+int class_ray[star_classes] = { 5000, 15000, 300, 20000, 15000, 1000, 3000,
+				2000, 4000, 1500, 30000, 250 };
+
+int class_rayvar[star_classes] = { 2000, 10000, 200, 15000, 5000, 1000, 3000,
+				   500, 5000, 10000, 1000, 10 };
+
+int class_act[star_classes] = { 2, 4, 1, 6, 5, 10, 100, 1, 2, 1, 10, 1 };
+
+char class_planets[star_classes] = { 12, 18, 8, 15, 20, 3, 0, 1, 7, 20, 2, 5 };
+
+char   nearstar_p_type       [maxbodies];
+int    nearstar_p_owner	     [maxbodies];
+char   nearstar_p_moonid     [maxbodies];
+double nearstar_p_ring       [maxbodies];
+double nearstar_p_tilt       [maxbodies];
+double nearstar_p_ray        [maxbodies];
+double nearstar_p_orb_ray    [maxbodies];
+double nearstar_p_orb_seed   [maxbodies];
+double nearstar_p_orb_tilt   [maxbodies];
+double nearstar_p_orb_orient [maxbodies];
+double nearstar_p_orb_ecc    [maxbodies];
+
+int planet_possiblemoons[] = { 1, 1, 2, 3, 2, 2, 18, 2, 3, 20, 20 };
+
+const double planet_orb_scaling=  5.0;
+const double avg_planet_sizing =  2.4;
+const double moon_orb_scaling  = 12.8;
+const double avg_moon_sizing   =  1.8;
+
+double avg_planet_ray[] = { 0.007, 0.003, 0.010, 0.011, 0.010,
+			    0.008, 0.064, 0.009, 0.012, 0.125,
+			    5.000 };
+
+char class_rgb[3*star_classes] = {
+	63, 58, 40,
+	30, 50, 63,
+	63, 63, 63,
+	63, 30, 20,
+	63, 55, 32,
+	32, 16, 10,
+	32, 28, 24,
+	10, 20, 63,
+	63, 32, 16,
+	48, 32, 63,
+	40, 10, 10,
+	00, 63, 63
+};
+
+void extract_ap_target_infos ();
+
+const double deg = M_PI / 180;
 
 // Implementations of common functions
 
@@ -301,4 +361,21 @@ int8_t isthere(double star_id) { // from Noctis-IV-LR: https://github.com/dgcole
     }
 
     return 0;
+}
+
+void extract_ap_target_infos ()
+{
+	srand (ap_target_x/100000*ap_target_y/100000*ap_target_z/100000);
+
+	ap_target_class = random (star_classes);
+	ap_target_ray = ((float)class_ray[ap_target_class] + (float)random(class_rayvar[ap_target_class])) * 0.001;
+
+	ap_target_r = class_rgb[3*ap_target_class+0];
+	ap_target_g = class_rgb[3*ap_target_class+1];
+	ap_target_b = class_rgb[3*ap_target_class+2];
+
+	ap_target_spin = 0;
+	if (ap_target_class==11) ap_target_spin = random (30) + 1;
+	if (ap_target_class==7) ap_target_spin = random (12) + 1;
+	if (ap_target_class==2) ap_target_spin = random (4) + 1;
 }

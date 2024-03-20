@@ -1,16 +1,18 @@
 /*
 
-	Noctis galactic map / DL command.
+	Noctis galactic guide / SET command.
 	GOES Net Module.
 
     Modified for compilation with Cosmopolitan libc
-    Requires that STARMAP.BIN, GUIDE.BIN and CURRENT.BIN are either in ../data/ or in the current working directory.
+    Requires that STARMAP.BIN is in ../data/ or in the current working directory.
 
     Compiling:
-    cosmocc dl.c -o dl.com
+    cosmocc st.c -o st.com
 
     USAGE:
-    ./dl.com FENIA
+    ./st.com BALASTRACKONASTREYA
+
+    note: this command will write to ../data/COMM.BIN first, and if that doesn't work ./COMM.BIN!
 */
 
 const double MAX_OBJECTS_PER_STAR = 80;
@@ -22,7 +24,6 @@ const double MAX_OBJECTS_PER_STAR = 80;
 #include "libc/fmt/conv.h"
 #include "libc/sysv/consts/o.h"
 #include "compat.h"
-
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -302,16 +303,9 @@ no_moons:
 
 //////////////////////////////////////////////////////////////////////////////
 
-long labposit[80];
-char labprogr[80];
-
-long labposit2[80];
-char labprogr2[80];
-
 long fpart (double id, char *label)
 {
 	long	fpart, no;
-	
 	int	attempts = 0;
 	double	multiplier = 1E9;
 
@@ -324,42 +318,19 @@ long fpart (double id, char *label)
 	id = fabs(id);
 
 	do {
-		
 		double lid = floor(id);
 		fpart = multiplier * ((double)id - (double)lid);
 		multiplier *= 1000;
 		attempts++;
-	}while (fpart < 1E6 && attempts < 44) ; 
-	
+	} while (fpart < 1E6 && attempts < 44);
+
 	return (fpart);
 }
 
-long notesabout (double id)
+void settarget ()
 {
-	long ncount = 0;
-	if (gh == -1) return (0);
-
-	lseek (gh, 4, SEEK_SET);
-	while (_read (gh, &mblock_id, 8) && _read (gh, &mblock_message, 76) == 76) {
-		if (memcmp (&mblock_id, "Removed:", 8)) {
-			if (mblock_id >= id - idscale && mblock_id <= id + idscale)
-				ncount++;
-		}
-	}
-
-	return (ncount);
-}
-
-void listplanets ()
-{
-	int	n, n2, b1, b2, b3;
-	long	b4, ncount;
-
-	int 	planet_nr, pcount;
-	int	planet_id, mcount;
-
-	char 	least = 0;
-
+	int	ch;
+	int	planet_nr;
 	double 	star_id;
 	long	fp_star_check;
 	long	fp_object_check;
@@ -380,271 +351,80 @@ void listplanets ()
 	else
 		fp_star_check = fpart (star_id, "F-PARTTESTSTARLABEL Sxx");
 
-
-
-	warn ("ORGANIZING TREE...", 1);
-
-	ap_target_x = laststar_x;
-	ap_target_y = laststar_y;
-	ap_target_z = laststar_z;
-	extract_ap_target_infos ();
-	prepare_nearstar ();
-
-	
-	sprintf (textbuffer, "*%s", subjectname);
-	msg (textbuffer);
-
-	if (query == 1) {
-		ncount = notesabout (star_id);
-		if (ncount > 0) {
-			sprintf (textbuffer, "]   (%ld NOTES)", ncount);
-			msg (textbuffer);
-		}
-		pcount = 0;
-		lseek (fh, 4, SEEK_SET);
-		while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
-			fp_object_check = fpart (object_id, object_label);
-			if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check && object_id > star_id + 1 - idscale && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
-			
-			planet_nr  = object_label[23] - '0';
-			planet_nr += 10 * (object_label[22] - '0');
-			if (nearstar_p_owner[planet_nr - 1] == -1) {
-				labposit[pcount] = lseek(fh, 0, SEEK_CUR) - 32;
-				labprogr[pcount] = planet_nr;
-				least = 1;
-				pcount++;
-			}}
-		}
-		do {
-			b1 = 0;
-			b2 = 0;
-			while (b2 < pcount - 1) {
-				if (labprogr[b2] > labprogr[b2+1]) {
-					b4 = labposit[b2];
-					labposit[b2] = labposit[b2+1];
-					labposit[b2+1] = b4;
-					b3 = labprogr[b2];
-					labprogr[b2] = labprogr[b2+1];
-					labprogr[b2+1] = b3;
-					b1 = 1;
-				}
-				b2++;
-			}
-		} while (b1);
-		n = 0;
-		while (pcount) {
-			lseek (fh, labposit[n], SEEK_SET);
-			_read (fh, &object_id, 8);
-			_read (fh, &object_label, 24);
-			planet_nr  = object_label[23] - '0';
-			planet_nr += 10 * (object_label[22] - '0');
-			pcount--;
-			if (pcount) {
-				sprintf (textbuffer, "$%02d&%s", planet_nr, object_label);
-				msg (textbuffer);
-				ncount = notesabout (object_id);
-				if (ncount > 0) {
-					sprintf (textbuffer, "]   (%ld NOTES)", ncount);
-					msg (textbuffer);
-				}
-			}
-			else {
-				sprintf (textbuffer, "[%02d&%s", planet_nr, object_label);
-				msg (textbuffer);
-				ncount = notesabout (object_id);
-				if (ncount > 0) {
-					sprintf (textbuffer, "    (%ld NOTES)", ncount);
-					msg (textbuffer);
-				}
-			}
-			planet_id  = object_label[23] - '0';
-			planet_id += 10 * (object_label[22] - '0');
-			mcount = 0;
-			lseek (fh, 4, SEEK_SET);
-			while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
-				fp_object_check = fpart (object_id, object_label);
-				if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check && object_id > star_id + 1 - idscale && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
-				planet_nr  = object_label[23] - '0';
-				planet_nr += 10 * (object_label[22] - '0');
-				if (nearstar_p_owner[planet_nr - 1] == planet_id - 1) {
-					labposit2[mcount] = lseek(fh, 0, SEEK_CUR) - 32;
-					labprogr2[mcount] = nearstar_p_moonid[planet_nr - 1];
-					mcount++;
-				}}
-			}
-			do {
-				b1 = 0;
-				b2 = 0;
-				while (b2 < mcount - 1) {
-					if (labprogr2[b2] > labprogr2[b2+1]) {
-						b4 = labposit2[b2];
-						labposit2[b2] = labposit2[b2+1];
-						labposit2[b2+1] = b4;
-						b3 = labprogr2[b2];
-						labprogr2[b2] = labprogr2[b2+1];
-						labprogr2[b2+1] = b3;
-						b1 = 1;
-					}
-					b2++;
-				}
-			} while (b1);
-			n2 = 0;
-			while (mcount) {
-				lseek (fh, labposit2[n2], SEEK_SET);
-				_read (fh, &object_id, 8);
-				_read (fh, &object_label, 24);
-				planet_nr  = object_label[23] - '0';
-				planet_nr += 10 * (object_label[22] - '0');
-				mcount--;
-				if (pcount) {
-					if (mcount) {
-						sprintf (textbuffer, "] $%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
-						msg (textbuffer);
-						ncount = notesabout (object_id);
-						if (ncount > 0) {
-							sprintf (textbuffer, "] ]   (%ld NOTES)", ncount);
-							msg (textbuffer);
-						}
-					}
-					else {
-						sprintf (textbuffer, "] [%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
-						msg (textbuffer);
-						ncount = notesabout (object_id);
-						if (ncount > 0) {
-							sprintf (textbuffer, "]     (%ld NOTES)", ncount);
-							msg (textbuffer);
-						}
-					}
-				}
-				else {
-					if (mcount) {
-						sprintf (textbuffer, "  $%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
-						msg (textbuffer);
-						ncount = notesabout (object_id);
-						if (ncount > 0) {
-							sprintf (textbuffer, "  ]   (%ld NOTES)", ncount);
-							msg (textbuffer);
-						}
-					}
-					else {
-						sprintf (textbuffer, "  [%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
-						msg (textbuffer);
-						ncount = notesabout (object_id);
-						if (ncount > 0) {
-							sprintf (textbuffer, "      (%ld NOTES)", ncount);
-							msg (textbuffer);
-						}
-					}
-				}
-				n2++;
-			}
-			n++;
-		}
-		if (least) {
-			msg (divider);
-			msg ("PLANETS LISTING END.");
-		}
-		else
-			msg ("NO KNOWN PLANETS.");
-	}
-
 	if (query == 2) {
-		ncount = notesabout (object_id);
-		if (ncount > 0) {
-			sprintf (textbuffer, "]   (%ld NOTES)", ncount);
-			msg (textbuffer);
-		}
-		planet_id  = object_label[23] - '0';
-		planet_id += 10 * (object_label[22] - '0');
-		mcount = 0;
+		if (laststar_x < nearstar_x - idscale || laststar_x > nearstar_x + idscale)
+			goto notpartofthissystem;
+		if (laststar_y < nearstar_y - idscale || laststar_y > nearstar_y + idscale)
+			goto notpartofthissystem;
+		if (laststar_z < nearstar_z - idscale || laststar_z > nearstar_z + idscale)
+			goto notpartofthissystem;
+		ap_target_x = laststar_x;
+		ap_target_y = laststar_y;
+		ap_target_z = laststar_z;
+		extract_ap_target_infos ();
+		prepare_nearstar ();
 		lseek (fh, 4, SEEK_SET);
 		while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
 			fp_object_check = fpart (object_id, object_label);
 			if (memcmp (&object_id, "Removed:", 8) && fp_object_check == fp_star_check && object_id > star_id + 1 - idscale && object_id <= star_id + MAX_OBJECTS_PER_STAR + idscale) {
-			planet_nr  = object_label[23] - '0';
-			planet_nr += 10 * (object_label[22] - '0');
-			if (nearstar_p_owner[planet_nr - 1] == planet_id - 1) {
-				labposit2[mcount] = lseek(fh, 0, SEEK_CUR) - 32;
-				labprogr2[mcount] = nearstar_p_moonid[planet_nr - 1];
-				least = 1;
-				mcount++;
+			if (!memcmp (object_label, subjectname, strlen(subjectname))) {
+				planet_nr  = object_label[23] - '0';
+				planet_nr += 10 * (object_label[22] - '0');
+				ch = _creat (comm, 0);
+                if (ch == -1) {
+                    ch = _creat (comm_cwd, 0);
+                }
+				if (ch > -1) {
+					_write (ch, &planet_nr, 2);
+					_close (ch);
+					msg ("LOC. TARGET DATA SENT");
+					msg ("BEGIN IN-SYSTEM DRIVE");
+				} else {
+                    msg ("COMMUNICATION ERROR.");
+                }
+				return;
 			}}
 		}
-		do {
-			b1 = 0;
-			b2 = 0;
-			while (b2 < mcount - 1) {
-				if (labprogr2[b2] > labprogr2[b2+1]) {
-					b4 = labposit2[b2];
-					labposit2[b2] = labposit2[b2+1];
-					labposit2[b2+1] = b4;
-					b3 = labprogr2[b2];
-					labprogr2[b2] = labprogr2[b2+1];
-					labprogr2[b2+1] = b3;
-					b1 = 1;
-				}
-				b2++;
-			}
-		} while (b1);
-		n2 = 0;
-		while (mcount) {
-			lseek (fh, labposit2[n2], SEEK_SET);
-			_read (fh, &object_id, 8);
-			_read (fh, &object_label, 24);
-			planet_nr  = object_label[23] - '0';
-			planet_nr += 10 * (object_label[22] - '0');
-			mcount--;
-			if (mcount) {
-				sprintf (textbuffer, "$%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
-				msg (textbuffer);
-				ncount = notesabout (object_id);
-				if (ncount > 0) {
-					sprintf (textbuffer, "]   (%ld NOTES)", ncount);
-					msg (textbuffer);
-				}
-			}
-			else {
-				sprintf (textbuffer, "[%02d&%s", nearstar_p_moonid[planet_nr - 1] + 1, object_label);
-				msg (textbuffer);
-				ncount = notesabout (object_id);
-				if (ncount > 0) {
-					sprintf (textbuffer, "    (%ld NOTES)", ncount);
-					msg (textbuffer);
-				}
-			}
-			n2++;
-		}
-		if (least) {
-			msg (divider);
-			msg ("MOONS LISTING END.");
+	    notpartofthissystem:
+		msg ("PLANET NOT FOUND AS");
+		msg ("PART OF THIS SYSTEM.");
+		sprintf (textbuffer, "PLEASE USE %cPAR%c TO", 34, 34);
+		msg (textbuffer);
+		msg ("FIND PARSIS FOR THE");
+		msg ("CORRESPONDING STAR.");
+	}
+	else {
+		ch = _creat (comm, 0);
+		if (ch > -1) {
+			_write (ch, &laststar_x, 8);
+			_write (ch, &laststar_y, 8);
+			_write (ch, &laststar_z, 8);
+			_close (ch);
+			msg ("REM. TARGET DATA SENT");
+			msg ("STARTING VIMANA DRIVE");
 		}
 		else
-			msg ("NO KNOWN MOONS.");
+			msg ("COMMUNICATION ERROR.");
 	}
 }
 
-double ap_target_id = 12345;
-
 int main(int argc, char *argv[])
 {
-	unfreeze ();
-	if (_argc<2 && ap_targetted != 1) {
+	if (_argc<2) {
 		msg ("________USAGE________");
-		msg ("DL OBJECTNAME");
-		msg ("DL OBJECTNAME:RANGE");
+		msg ("ST OBJECTNAME");
+		msg ("ST OBJECTNAME:RANGE");
 		msg ("^^^^^^^^^^^^^^^^^^^^^");
 		msg ("PLEASE RUN AGAIN,");
 		msg ("SPECIFYING PARAMETERS");
 		msg (divider);
-		msg ("(DL REVISION 6011/29)");
+		msg ("(ST REVISION 6011/28)");
 		return;
 	}
 	else {
-		msg ("DEPENDENCIES LISTING:");
+		msg ("LOOKING FOR TARGET...");
 		msg (divider);
 	}
-
-	gh = _open (guide, O_RDONLY);
 
 	fh = _open (file, O_RDONLY);
 	if (fh == -1) {
@@ -653,22 +433,6 @@ int main(int argc, char *argv[])
 			msg ("STARMAP NOT AVAILABLE");
 			return;
 		}
-	}
-
-	if (_argc<2) {
-		ap_target_id = ap_target_x / 100000 * ap_target_y / 100000 * ap_target_z / 100000;
-		lseek (fh, 4, SEEK_SET);
-		while (_read (fh, &object_id, 8) && _read (fh, &object_label, 24) == 24) {
-			if (object_id > ap_target_id - idscale && object_id < ap_target_id + idscale) {
-				object_label[20] = 0;
-				strcpy (objectname, object_label);
-				analyzed_sectors_range = 100;
-				goto no_arguments;
-			}
-		}
-		msg ("CURRENT REMOTE TARGET");
-		msg ("CANNOT BE FOUND.");
-		return;
 	}
 
 	i = 2;
@@ -702,13 +466,12 @@ int main(int argc, char *argv[])
 			analyzed_sectors_range = sts;
 	}
 
+	unfreeze ();
 	if (sts > 100) warn ("SCANNING THE GALAXY: ESC TO STOP", -1);
 
 	strupr (parbuffer);
 	strupr (objectname);
 	objectname[i] = 0;
-
-    no_arguments:
 	query = find (objectname);
 	if (query) {
 		if (query==1) msg ("SUBJECT: STAR;");
@@ -716,9 +479,8 @@ int main(int argc, char *argv[])
 		sprintf (outbuffer, "NAME: %s", subjectname);
 		msg (outbuffer);
 		msg ("_____________________");
-		listplanets ();
+		settarget ();
 	}
 
-	if (gh != -1) _close (gh);
 	_close (fh);
 }
