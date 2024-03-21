@@ -194,10 +194,10 @@ int main(int argc, char *argv[]) {
 		gh = open (guide, O_RDONLY);
 		if (gh == -1) {
 			gh = open (guide_cwd, O_RDONLY);
-			if (gh == -1) {
-				msg ("DATABASE ERROR.");
-				msg ("(ERROR CODE 1003)");
-			}
+		}
+		if (gh == -1) {
+			msg ("DATABASE ERROR.");
+			msg ("(ERROR CODE 1003)");
 		}
 		else {
 			rec = 0;
