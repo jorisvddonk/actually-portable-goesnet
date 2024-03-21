@@ -23,6 +23,7 @@ const double MAX_OBJECTS_PER_STAR = 80;
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
 #include "libc/sysv/consts/o.h"
+#include "fileops.h"
 #include "compat.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -32,13 +33,6 @@ char	query;
 
 int 	i, fh, gh;
 int 	analyzed_sectors_range;
-
-char	outbuffer[40];
-char	textbuffer[40];
-char	parbuffer[160];
-char	nullbuffer[128];
-char	objectname[21];
-char	subjectname[21];
 
 char find (char *starname)
 {
@@ -370,10 +364,7 @@ void settarget ()
 			if (!memcmp (object_label, subjectname, strlen(subjectname))) {
 				planet_nr  = object_label[23] - '0';
 				planet_nr += 10 * (object_label[22] - '0');
-				ch = _creat (comm, 0);
-                if (ch == -1) {
-                    ch = _creat (comm_cwd, 0);
-                }
+				ch = createComm();
 				if (ch > -1) {
 					_write (ch, &planet_nr, 2);
 					_close (ch);
@@ -394,7 +385,7 @@ void settarget ()
 		msg ("CORRESPONDING STAR.");
 	}
 	else {
-		ch = _creat (comm, 0);
+		ch = createComm();
 		if (ch > -1) {
 			_write (ch, &laststar_x, 8);
 			_write (ch, &laststar_y, 8);
@@ -426,13 +417,10 @@ int main(int argc, char *argv[])
 		msg (divider);
 	}
 
-	fh = _open (file, O_RDONLY);
+	fh = openStarmap();
 	if (fh == -1) {
-		fh = _open (file_cwd, O_RDONLY);
-		if (fh == -1) {
-			msg ("STARMAP NOT AVAILABLE");
-			return;
-		}
+		msg ("STARMAP NOT AVAILABLE");
+		return;
 	}
 
 	i = 2;

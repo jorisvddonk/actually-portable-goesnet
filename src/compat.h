@@ -2,11 +2,9 @@
 
 // Compatibilty with Cosmopolitan libc:
 #define _read read
-#define _open open
 #define _argc argc
 #define _argv argv
 #define _close close
-#define _creat creat
 #define _write write
 #define strupr brtl_strupr
 #define random brtl_random
@@ -25,17 +23,12 @@
 #define log2avgmoons	2
 #define maxbodies	20 * avgmoons
 
-
-
-
-char   *situation_file  = "..//data//CURRENT.BIN";
-char   *situation_file_cwd  = "CURRENT.BIN";
-char	*file = "..//data//STARMAP.BIN";
-char    *file_cwd = "STARMAP.BIN";
-char	*guide = "..//data//GUIDE.BIN";
-char	*guide_cwd = "GUIDE.BIN";
-char    *comm = "..//data//COMM.BIN";
-char    *comm_cwd = "COMM.BIN";
+char	outbuffer[40];
+char	textbuffer[40];
+char	parbuffer[160];
+char	nullbuffer[128];
+char	objectname[21];
+char	subjectname[21];
 
 char   nsync               = 1;		// 0
 char   anti_rad           = 1;          // 1
@@ -202,14 +195,7 @@ void msg (char *string)
 
 void unfreeze() {
     /* Reading the previous situation */
-	int fh = _open (situation_file, O_RDONLY);
-	if (fh == -1) {
-		fh = _open (situation_file_cwd, O_RDONLY);
-		if (fh == -1) {
-            msg( "CANNOT READ SITUATION FILE ");
-			return;
-		}
-	}
+	int fh = openSituation();
 
     read(fh, &nsync, 1);
     read(fh, &anti_rad, 1);

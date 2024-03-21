@@ -20,6 +20,7 @@
 #include "libc/calls/calls.h"
 #include "libc/fmt/conv.h"
 #include "libc/sysv/consts/o.h"
+#include "fileops.h"
 #include "compat.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -29,13 +30,6 @@ char	query;
 
 int 	i, fh, gh;
 int 	analyzed_sectors_range;
-
-char	outbuffer[40];
-char	textbuffer[40];
-char	parbuffer[160];
-char	nullbuffer[128];
-char	objectname[21];
-char	subjectname[21];
 
 double	mblock_subject;
 char	mblock_message[77];
@@ -153,13 +147,10 @@ int main(int argc, char *argv[])
 		msg (divider);
 	}
 
-	fh = _open (file, O_RDONLY);
+	fh = openStarmap();
 	if (fh == -1) {
-		fh = _open (file_cwd, O_RDONLY);
-		if (fh == -1) {
-			msg ("STARMAP NOT AVAILABLE");
-			return;
-		}
+		msg ("STARMAP NOT AVAILABLE");
+		return;
 	}
 
 	i = 2;

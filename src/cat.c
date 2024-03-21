@@ -17,6 +17,7 @@
 #include "libc/str/str.h"
 #include "libc/calls/calls.h"
 #include "libc/sysv/consts/o.h"
+#include "fileops.h"
 
 char msgbuffer[77];
 char *divider = "&&&&&&&&&&&&&&&&&&&&&";
@@ -46,10 +47,6 @@ double  idscale = 0.00001;
 
 long	round;
 int 	i, fh, gh;
-char	*file = "..//data//STARMAP.BIN";
-char    *file_cwd = "STARMAP.BIN";
-char	*guide = "..//data//GUIDE.BIN";
-char	*guide_cwd = "GUIDE.BIN";
 
 char	outbuffer[40];
 char	textbuffer[40];
@@ -135,13 +132,10 @@ int main(int argc, char *argv[]) {
 		msg (divider);
 	}
 
-	fh = open (file, O_RDONLY);
+	fh = openStarmap();
 	if (fh == -1) {
-		fh = open (file_cwd, O_RDONLY);
-		if (fh == -1) {
-			msg ("STARMAP NOT AVAILABLE");
-			return;
-		}
+		msg ("STARMAP NOT AVAILABLE");
+		return;
 	}
 
 	i = 2;
@@ -191,10 +185,7 @@ int main(int argc, char *argv[]) {
 		if (query==2) msg ("SUBJECT: PLANET;");
 		msg (subjectname);
 		msg (divider);
-		gh = open (guide, O_RDONLY);
-		if (gh == -1) {
-			gh = open (guide_cwd, O_RDONLY);
-		}
+		gh = openGuide();
 		if (gh == -1) {
 			msg ("DATABASE ERROR.");
 			msg ("(ERROR CODE 1003)");
