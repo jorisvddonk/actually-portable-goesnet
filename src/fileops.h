@@ -107,14 +107,14 @@ int createComm()
             pth2[pth_len+1+i] = comm_cwd[i];
         }
         pth2[pth_len+1+comm_len] = 0;
-        ch = creat (pth2, 0);
+        ch = creat (pth2, 0644);
         free(pth2);
     }
     if (ch == -1) {
-        ch = creat (comm_cwd, 0);
+        ch = creat (comm_cwd, 0644);
     }
 	if (ch == -1) {
-		ch = creat (comm, 0);
+		ch = creat (comm, 0644);
 	}
     return ch;
 }
